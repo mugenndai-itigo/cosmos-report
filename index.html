@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="コスモス日報">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<title>コスモス 作業日報</title>
+<style>
+:root {
+  --purple: #534AB7;
+  --purple-light: #7F77DD;
+  --purple-pale: #EEEDFE;
+  --purple-text: #3C3489;
+  --orange: #EF9F27;
+  --green: #3B6D11;
+  --green-bg: #EAF3DE;
+  --tab-h: 56px;
+  --submit-h: 70px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background: #f7f8fc;
+  color: #2d3748;
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.app-header {
+  background: linear-gradient(135deg, var(--purple), var(--purple-light));
+  color: white;
+  padding: calc(16px + env(safe-area-inset-top)) 24px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.app-header h1 { font-size: 1.2rem; font-weight: 600; margin-bottom: 2px; }
+.app-header p { font-size: 0.78rem; opacity: .85; }
+
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 16px calc(var(--tab-h) + var(--submit-h) + env(safe-area-inset-bottom) + 24px);
+}
+
+.card {
+  background: white;
+  border: 1px solid #e8e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #718096;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.field-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.field { flex: 1; min-width: 110px; }
+.field label { font-size: 13px; color: #a0aec0; display: block; margin-bottom: 4px; font-weight: 500; }
+
+/* iOSのズーム防止: 16px以上 */
+input[type=text], input[type=date], input[type=time], textarea, select {
+  width: 100%;
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #2d3748;
+  font-family: inherit;
+  transition: border .15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--purple-light);
+  box-shadow: 0 0 0 3px rgba(127,119,221,.12);
+}
+textarea { resize: vertical; line-height: 1.55; }
+
+/* Apple HIG準拠: タップターゲット44px以上 */
+.shift-btns, .cat-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.sbtn {
+  font-size: 14px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border-radius: 22px;
+  border: 1px solid #e2e8f0;
+  background: #f7f8fc;
+  color: #718096;
+  cursor: pointer;
+  transition: all .12s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+}
+.sbtn.sel { background: var(--purple-pale); color: var(--purple-text); border-color: #AFA9EC; font-weight: 600; }
+.sbtn:active:not(.sel) { background: #f0f0f8; }
+
+.member-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  min-height: 48px;
+  cursor: text;
+  background: white;
+  transition: border .15s;
+}
+.member-wrap:focus-within { border-color: var(--purple-light); box-shadow: 0 0 0 3px rgba(127,119,221,.12); }
+.mtag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--purple-pale);
+  color: var(--purple-text);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.mtag button {
+  background: none;
+  border: none;
+  color: var(--purple-light);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 2px;
+  min-width: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tag-inp {
+  border: none;
+  outline: none;
+  font-size: 16px;
+  min-width: 120px;
+  flex: 1;
+  background: transparent;
+  color: #2d3748;
+  padding: 4px 0;
+}
+
+.task-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+.task-row textarea { flex: 1; min-height: 60px; }
+.del-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.del-btn:active { background: #fff5f5; border-color: #feb2b2; color: #e53e3e; }
+
+.add-btn {
+  font-size: 14px;
+  color: var(--purple-light);
+  background: none;
+  border: 1px dashed #c8c4f0;
+  border-radius: 9px;
+  padding: 12px 14px;
+  min-height: 44px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 2px;
+  font-family: inherit;
+  transition: all .12s;
+}
+.add-btn:active { background: var(--purple-pale); border-style: solid; }
+
+.star-row { display: flex; gap: 2px; }
+.star {
+  font-size: 32px;
+  cursor: pointer;
+  color: #e2e8f0;
+  transition: color .1s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.star.on { color: var(--orange); }
+
+.preview-box {
+  background: #f7f8fc;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.85;
+  color: #2d3748;
+  white-space: pre-wrap;
+  font-family: 'Menlo', 'Monaco', monospace;
+  display: none;
+  border: 1px solid #e2e8f0;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.success-box {
+  background: var(--green-bg);
+  border: 1px solid #97C459;
+  border-radius: 14px;
+  padding: 24px 20px;
+  text-align: center;
+  display: none;
+  margin-bottom: 16px;
+}
+.success-icon { font-size: 40px; margin-bottom: 10px; }
+.success-box p { color: var(--green); font-size: 15px; line-height: 1.6; margin-bottom: 4px; }
+
+.action-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.action-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 13px 16px;
+  min-height: 50px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.action-btn:active { opacity: .8; }
+.btn-copy { background: var(--purple); color: white; }
+.btn-share { background: #007AFF; color: white; }
+.btn-reset { background: white; color: var(--green); border: 1px solid #97C459; }
+
+/* 固定送信エリア */
+#submit-area {
+  position: fixed;
+  bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  padding: 10px 16px;
+  background: rgba(247,248,252,.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid #e8e8f0;
+  z-index: 10;
+}
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--purple);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+  min-height: 50px;
+}
+.submit-btn:active { background: #2d2870; }
+.submit-btn:disabled { background: #e2e8f0; color: #a0aec0; cursor: default; }
+
+/* タブバー */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  background: white;
+  border-top: 1px solid #e8e8f0;
+  z-index: 20;
+  box-shadow: 0 -2px 10px rgba(0,0,0,.06);
+}
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-family: inherit;
+  color: #a0aec0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: var(--tab-h);
+  transition: color .15s;
+  padding: 0;
+}
+.tab-btn.active { color: var(--purple); }
+.tab-icon { font-size: 22px; line-height: 1; }
+.tab-label { font-size: 11px; font-weight: 600; letter-spacing: .01em; }
+
+/* 履歴 */
+.history-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #a0aec0;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.history-card {
+  cursor: pointer;
+  transition: background .1s;
+  position: relative;
+}
+.history-card:active { background: #f7f8fc; }
+.history-date { font-size: 17px; font-weight: 700; color: #2d3748; margin-bottom: 3px; }
+.history-shift { font-size: 13px; color: var(--purple); font-weight: 600; margin-bottom: 6px; }
+.history-meta { font-size: 13px; color: #718096; line-height: 1.6; }
+.history-del {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  color: #a0aec0;
+}
+.history-del:active { background: #fff5f5; border-color: #feb2b2; color: #e53e3e; }
+
+/* 詳細モーダル（ボトムシート） */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal.open { display: flex; }
+.modal-sheet {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.modal-header {
+  padding: 12px 20px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-title { font-size: 17px; font-weight: 700; color: #2d3748; }
+.modal-close {
+  background: #f0f2f8;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #718096;
+}
+.modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  padding: 0 20px 12px;
+}
+.modal-report-text {
+  font-size: 13px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  color: #2d3748;
+  font-family: 'Menlo', 'Monaco', monospace;
+  background: #f7f8fc;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+}
+.modal-actions {
+  padding: 12px 20px;
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid #e8e8f0;
+  flex-shrink: 0;
+}
+
+.hint { font-size: 13px; color: #a0aec0; margin-top: 6px; line-height: 1.5; }
+.preview-toggle {
+  font-size: 14px;
+  color: var(--purple-light);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  min-height: 44px;
+  padding: 0 4px;
+}
+.duration-display { font-size: 14px; color: var(--purple); font-weight: 600; margin-top: 6px; min-height: 22px; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>📋 コスモス 作業日報</h1>
+  <p>登録販売者 日次記録アプリ</p>
+</div>
+
+<!-- 日報作成タブ -->
+<div id="form-tab">
+<div class="container">
+
+<!-- 基本情報 -->
+<div class="card">
+  <div class="card-title">基本情報</div>
+  <div class="field-row">
+    <div class="field">
+      <label>日付</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="field">
+      <label>開始時間</label>
+      <input type="time" id="f-start" value="12:30" onchange="updateDuration()">
+    </div>
+    <div class="field">
+      <label>終了時間</label>
+      <input type="time" id="f-end" value="21:15" onchange="updateDuration()">
+    </div>
+  </div>
+  <div class="duration-display" id="duration-disp"></div>
+  <div style="margin-top:12px">
+    <label style="font-size:13px;color:#a0aec0;font-weight:500">シフト区分</label>
+    <div class="shift-btns" id="shift-btns">
+      <button class="sbtn sel" onclick="selShift(this,'遅番（〜21:15）','21:15')">遅番（〜21:15）</button>
+      <button class="sbtn" onclick="selShift(this,'早番（〜17:00）','17:00')">早番（〜17:00）</button>
+      <button class="sbtn" onclick="selShift(this,'中番','')">中番</button>
+      <button class="sbtn" onclick="selShift(this,'その他','')">その他</button>
+    </div>
+  </div>
+  <input type="hidden" id="f-shift" value="遅番（〜21:15）">
+</div>
+
+<!-- メンバー -->
+<div class="card">
+  <div class="card-title">本日のメンバー</div>
+  <div class="member-wrap" id="member-wrap" onclick="document.getElementById('member-inp').focus()">
+    <div class="mtag">りえ（自分）<button onclick="removeMember(this,event)">×</button></div>
+    <input class="tag-inp" id="member-inp" placeholder="名前を入力してEnter…" onkeydown="addMember(event)">
+  </div>
+  <div class="hint">Enterキーで追加。登録販売者の在籍確認・引き継ぎ記録に活用できます。</div>
+</div>
+
+<!-- 作業カテゴリ -->
+<div class="card">
+  <div class="card-title">作業カテゴリ（複数選択可）</div>
+  <div class="cat-btns" id="cat-btns">
+    <button class="sbtn sel" onclick="toggleCat(this)">医薬品相談</button>
+    <button class="sbtn" onclick="toggleCat(this)">レジ・接客</button>
+    <button class="sbtn" onclick="toggleCat(this)">品出し・陳列</button>
+    <button class="sbtn" onclick="toggleCat(this)">在庫確認</button>
+    <button class="sbtn" onclick="toggleCat(this)">発注</button>
+    <button class="sbtn" onclick="toggleCat(this)">清掃</button>
+    <button class="sbtn" onclick="toggleCat(this)">閉店作業</button>
+    <button class="sbtn" onclick="toggleCat(this)">棚卸し</button>
+    <button class="sbtn" onclick="toggleCat(this)">研修・勉強</button>
+  </div>
+</div>
+
+<!-- 作業内容 -->
+<div class="card">
+  <div class="card-title">作業内容の詳細</div>
+  <div id="tasks">
+    <div class="task-row">
+      <textarea rows="2" placeholder="例：花粉症薬の相談対応 3件。アレグラとクラリチンの違いを案内しました。"></textarea>
+      <button class="del-btn" onclick="removeTask(this)">×</button>
+    </div>
+  </div>
+  <button class="add-btn" onclick="addTask()">＋ 作業を追加</button>
+</div>
+
+<!-- 登録販売者専用記録 -->
+<div class="card">
+  <div class="card-title">登録販売者 専門記録</div>
+  <div class="field" style="margin-bottom:12px">
+    <label>医薬品相談件数と内容</label>
+    <input type="text" id="f-consult" placeholder="例：5件（花粉症×3、頭痛×1、胃腸薬×1）" style="margin-top:4px">
+  </div>
+  <div class="field" style="margin-bottom:12px">
+    <label>第2類医薬品 販売・対応の記録</label>
+    <textarea id="f-pharma" rows="2" placeholder="例：禁忌確認済み。他の薬との飲み合わせをお客様に説明。" style="margin-top:4px"></textarea>
+  </div>
+  <div class="field">
+    <label>ヒヤリハット・申し送り事項</label>
+    <textarea id="f-hiyari" rows="2" placeholder="例：特になし。／薬の配置変更あり、翌日スタッフへ要共有。" style="margin-top:4px"></textarea>
+  </div>
+</div>
+
+<!-- コンディション -->
+<div class="card">
+  <div class="card-title">本日のコンディション</div>
+  <div style="margin-bottom:14px">
+    <label style="font-size:13px;color:#a0aec0;font-weight:500;display:block;margin-bottom:7px">体力・集中力（★で評価）</label>
+    <div class="star-row" id="stars">
+      <span class="star" onclick="setRating(1)">★</span>
+      <span class="star" onclick="setRating(2)">★</span>
+      <span class="star on" onclick="setRating(3)">★</span>
+      <span class="star" onclick="setRating(4)">★</span>
+      <span class="star" onclick="setRating(5)">★</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>メモ・一言感想</label>
+    <textarea id="f-memo" rows="2" placeholder="例：花粉症シーズンで忙しかったが充実。足が疲れた。"></textarea>
+  </div>
+</div>
+
+<!-- プレビュー -->
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div class="card-title" style="margin:0">日報プレビュー</div>
+    <button class="preview-toggle" onclick="togglePreview()">表示 / 非表示</button>
+  </div>
+  <div class="preview-box" id="preview"></div>
+</div>
+
+<!-- 成功ボックス -->
+<div class="success-box" id="success">
+  <div class="success-icon">✅</div>
+  <p id="success-msg">日報を保存しました！</p>
+  <div class="action-btns">
+    <button class="action-btn btn-copy" onclick="copyReport()">📋 コピー</button>
+    <button class="action-btn btn-share" id="share-btn" style="display:none" onclick="shareReport()">📤 共有</button>
+  </div>
+  <div class="action-btns" style="margin-top:8px">
+    <button class="action-btn btn-reset" onclick="resetForm()">＋ 新しい日報を作成する</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+</div><!-- /form-tab -->
+
+<!-- 履歴タブ -->
+<div id="history-tab" style="display:none">
+  <div class="container">
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- 固定送信ボタン -->
+<div id="submit-area">
+  <button class="submit-btn" onclick="submitReport()" id="submit-btn">
+    💾 日報を保存する
+  </button>
+</div>
+
+<!-- タブバー -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-form" onclick="switchTab('form')">
+    <span class="tab-icon">📝</span>
+    <span class="tab-label">日報作成</span>
+  </button>
+  <button class="tab-btn" id="tab-history" onclick="switchTab('history')">
+    <span class="tab-icon">📚</span>
+    <span class="tab-label">履歴</span>
+  </button>
+</div>
+
+<!-- 詳細モーダル（ボトムシート） -->
+<div class="modal" id="detail-modal" onclick="closeModalOverlay(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">日報詳細</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-report-text" id="modal-content"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="action-btn btn-copy" onclick="copyModalReport()" style="flex:1">📋 コピー</button>
+      <button class="action-btn btn-share" id="modal-share-btn" style="flex:1;display:none" onclick="shareModalReport()">📤 共有</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Service Worker登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+
+// 共有API対応確認
+if (navigator.share) {
+  document.getElementById('share-btn').style.display = '';
+  document.getElementById('modal-share-btn').style.display = '';
+}
+
+// 今日の日付をセット
+(function() {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth()+1).padStart(2,'0');
+  const d = String(t.getDate()).padStart(2,'0');
+  document.getElementById('f-date').value = `${y}-${m}-${d}`;
+})();
+
+let rating = 3;
+let lastReportText = '';
+let currentModalText = '';
+
+function updateDuration() {
+  const s = document.getElementById('f-start').value;
+  const e = document.getElementById('f-end').value;
+  if (!s || !e) return;
+  const [sh,sm] = s.split(':').map(Number);
+  const [eh,em] = e.split(':').map(Number);
+  const mins = eh*60+em - sh*60-sm;
+  if (mins <= 0) { document.getElementById('duration-disp').textContent = ''; return; }
+  const h = (mins/60).toFixed(2).replace(/\.?0+$/,'');
+  document.getElementById('duration-disp').textContent = `勤務時間：${h}時間`;
+}
+updateDuration();
+
+function selShift(el, val, endTime) {
+  document.querySelectorAll('#shift-btns .sbtn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('f-shift').value = val;
+  if (endTime) { document.getElementById('f-end').value = endTime; updateDuration(); }
+}
+
+function toggleCat(el) { el.classList.toggle('sel'); }
+
+function getSelectedCats() {
+  return Array.from(document.querySelectorAll('#cat-btns .sbtn.sel')).map(b => b.textContent.trim());
+}
+
+function addMember(e) {
+  if (e.key !== 'Enter') return;
+  const inp = document.getElementById('member-inp');
+  const val = inp.value.trim();
+  if (!val) return;
+  const wrap = document.getElementById('member-wrap');
+  const tag = document.createElement('div');
+  tag.className = 'mtag';
+  tag.innerHTML = `${val}<button onclick="removeMember(this,event)">×</button>`;
+  wrap.insertBefore(tag, inp);
+  inp.value = '';
+  e.preventDefault();
+}
+
+function removeMember(btn, e) { e.stopPropagation(); btn.parentElement.remove(); }
+
+function addTask() {
+  const tasks = document.getElementById('tasks');
+  const row = document.createElement('div');
+  row.className = 'task-row';
+  row.innerHTML = `<textarea rows="2" placeholder="作業内容を記入..."></textarea><button class="del-btn" onclick="removeTask(this)">×</button>`;
+  tasks.appendChild(row);
+  row.querySelector('textarea').focus();
+}
+
+function removeTask(btn) {
+  if (document.querySelectorAll('.task-row').length > 1) btn.parentElement.remove();
+}
+
+function setRating(n) {
+  rating = n;
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('on', i < n));
+}
+
+function getMembers() {
+  return Array.from(document.querySelectorAll('.mtag')).map(t => {
+    // ボタンの×テキストを除いた最初のテキストノード
+    const node = t.firstChild;
+    return node ? node.textContent.trim() : '';
+  }).filter(Boolean);
+}
+
+function getTasks() {
+  return Array.from(document.querySelectorAll('#tasks textarea')).map(t => t.value.trim()).filter(Boolean);
+}
+
+function calcHours(s, e) {
+  if (!s || !e) return '?';
+  const [sh,sm] = s.split(':').map(Number);
+  const [eh,em] = e.split(':').map(Number);
+  return ((eh*60+em - sh*60-sm)/60).toFixed(2).replace(/\.?0+$/,'');
+}
+
+function collectFormData() {
+  return {
+    date: document.getElementById('f-date').value,
+    start: document.getElementById('f-start').value,
+    end: document.getElementById('f-end').value,
+    shift: document.getElementById('f-shift').value,
+    members: getMembers(),
+    categories: getSelectedCats(),
+    tasks: getTasks(),
+    consult: document.getElementById('f-consult').value,
+    pharma: document.getElementById('f-pharma').value,
+    hiyari: document.getElementById('f-hiyari').value,
+    rating: rating,
+    memo: document.getElementById('f-memo').value
+  };
+}
+
+function buildReport(data) {
+  const stars = '★'.repeat(data.rating) + '☆'.repeat(5 - data.rating);
+  return `【コスモス 作業日報】${data.date}
+━━━━━━━━━━━━━━━━━━
+◆ 基本情報
+・日付：${data.date}
+・勤務時間：${data.start}〜${data.end}（${calcHours(data.start, data.end)}h）
+・シフト区分：${data.shift}
+
+◆ 本日のメンバー
+・${data.members.join('、') || '（未記入）'}
+
+◆ 作業カテゴリ
+・${data.categories.join('・') || '（未選択）'}
+
+◆ 作業内容
+${data.tasks.length ? data.tasks.map((t,i) => `${i+1}. ${t}`).join('\n') : '（未記入）'}
+
+◆ 登録販売者 専門記録
+・医薬品相談：${data.consult || '記録なし'}
+・第2類販売記録：${data.pharma || '特になし'}
+・ヒヤリハット・申し送り：${data.hiyari || '特になし'}
+
+◆ 本日のコンディション：${stars}（${data.rating}/5）
+・メモ：${data.memo || '特になし'}
+━━━━━━━━━━━━━━━━━━
+#コスモス #登録販売者 #日報`;
+}
+
+function togglePreview() {
+  const box = document.getElementById('preview');
+  if (box.style.display === 'block') { box.style.display = 'none'; return; }
+  box.textContent = buildReport(collectFormData());
+  box.style.display = 'block';
+}
+
+function submitReport() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  const data = collectFormData();
+  const reportText = buildReport(data);
+  lastReportText = reportText;
+
+  // localStorageに保存
+  localStorage.setItem(`report_${data.date}`, JSON.stringify(data));
+
+  // クリップボードにコピー（バックグラウンド）
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(reportText).catch(() => {});
+  }
+
+  document.getElementById('submit-area').style.display = 'none';
+  document.getElementById('success').style.display = 'block';
+  document.getElementById('success-msg').textContent = `${data.date} の日報を保存しました！`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function copyReport() {
+  const btn = event.currentTarget;
+  const orig = btn.innerHTML;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(lastReportText).then(() => {
+      btn.innerHTML = '✅ コピーしました';
+      setTimeout(() => btn.innerHTML = orig, 2000);
+    }).catch(() => fallbackCopy(lastReportText, btn, orig));
+  } else {
+    fallbackCopy(lastReportText, btn, orig);
+  }
+}
+
+async function shareReport() {
+  if (!navigator.share) return;
+  try {
+    await navigator.share({ title: 'コスモス 作業日報', text: lastReportText });
+  } catch(e) {
+    if (e.name !== 'AbortError') copyReport();
+  }
+}
+
+function fallbackCopy(text, btn, orig) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  if (btn && orig) {
+    btn.innerHTML = '✅ コピーしました';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  }
+}
+
+function resetForm() {
+  document.getElementById('success').style.display = 'none';
+  document.getElementById('submit-area').style.display = '';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').textContent = '💾 日報を保存する';
+  document.getElementById('f-consult').value = '';
+  document.getElementById('f-pharma').value = '';
+  document.getElementById('f-hiyari').value = '';
+  document.getElementById('f-memo').value = '';
+  document.getElementById('preview').style.display = 'none';
+  document.querySelectorAll('#tasks textarea').forEach((t,i) => { if(i>0) t.parentElement.remove(); else t.value=''; });
+  setRating(3);
+  const t = new Date();
+  document.getElementById('f-date').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// タブ切り替え
+function switchTab(tab) {
+  const isSuccess = document.getElementById('success').style.display === 'block';
+  if (tab === 'form') {
+    document.getElementById('form-tab').style.display = '';
+    document.getElementById('history-tab').style.display = 'none';
+    document.getElementById('submit-area').style.display = isSuccess ? 'none' : '';
+    document.getElementById('tab-form').classList.add('active');
+    document.getElementById('tab-history').classList.remove('active');
+  } else {
+    document.getElementById('form-tab').style.display = 'none';
+    document.getElementById('history-tab').style.display = '';
+    document.getElementById('submit-area').style.display = 'none';
+    document.getElementById('tab-form').classList.remove('active');
+    document.getElementById('tab-history').classList.add('active');
+    renderHistory();
+  }
+}
+
+// 履歴
+function loadReports() {
+  const reports = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('report_')) {
+      try { reports.push(JSON.parse(localStorage.getItem(key))); } catch(e) {}
+    }
+  }
+  return reports.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const reports = loadReports();
+  if (reports.length === 0) {
+    list.innerHTML = '<div class="history-empty">📭<br>まだ保存された日報はありません。<br>日報を作成して保存しましょう！</div>';
+    return;
+  }
+  list.innerHTML = reports.map(r => `
+    <div class="card history-card" onclick="showHistoryDetail('${r.date}')">
+      <div style="padding-right:56px">
+        <div class="history-date">${r.date}</div>
+        <div class="history-shift">${r.shift || ''}</div>
+        <div class="history-meta">
+          👥 ${r.members ? r.members.join('、') : '—'}<br>
+          🏷️ ${r.categories && r.categories.length ? r.categories.slice(0,3).join('・') + (r.categories.length > 3 ? '…' : '') : '（カテゴリなし）'}
+        </div>
+      </div>
+      <button class="history-del" onclick="deleteReport('${r.date}', event)" title="削除">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function showHistoryDetail(date) {
+  const raw = localStorage.getItem(`report_${date}`);
+  if (!raw) return;
+  const data = JSON.parse(raw);
+  currentModalText = buildReport(data);
+  document.getElementById('modal-title').textContent = `日報 ${date}`;
+  document.getElementById('modal-content').textContent = currentModalText;
+  document.getElementById('detail-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeModalOverlay(e) {
+  if (e.target === document.getElementById('detail-modal')) closeModal();
+}
+
+function copyModalReport() {
+  const btn = event.currentTarget;
+  const orig = btn.innerHTML;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(currentModalText).then(() => {
+      btn.innerHTML = '✅ コピーしました';
+      setTimeout(() => btn.innerHTML = orig, 2000);
+    }).catch(() => fallbackCopy(currentModalText, btn, orig));
+  } else {
+    fallbackCopy(currentModalText, btn, orig);
+  }
+}
+
+async function shareModalReport() {
+  if (!navigator.share) return;
+  try {
+    await navigator.share({ title: 'コスモス 作業日報', text: currentModalText });
+  } catch(e) {
+    if (e.name !== 'AbortError') copyModalReport();
+  }
+}
+
+function deleteReport(date, e) {
+  e.stopPropagation();
+  if (!confirm(`${date} の日報を削除しますか？`)) return;
+  localStorage.removeItem(`report_${date}`);
+  renderHistory();
+}
+</script>
+</body>
+</html>
