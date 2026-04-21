@@ -184,12 +184,19 @@ export default function CosmosReport() {
   }
 
   // ---------- メンバー操作 ----------
+  function addMember() {
+    const val = memberInput.trim()
+    if (val) {
+      setMembers(prev => [...prev, val])
+      setMemberInput('')
+      document.getElementById('member-inp')?.focus()
+    }
+  }
+
   function handleMemberKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== 'Enter') return
     e.preventDefault()
-    const val = memberInput.trim()
-    if (val) setMembers(prev => [...prev, val])
-    setMemberInput('')
+    addMember()
   }
 
   function removeMember(name: string) {
@@ -245,6 +252,9 @@ export default function CosmosReport() {
   function resetForm() {
     setShowSuccess(false)
     setDate(getTodayStr())
+    setMembers(['りえ（自分）'])
+    setMemberInput('')
+    setSelectedCats(['医薬品相談'])
     setConsult(''); setPharma(''); setHiyari(''); setMemo('')
     setTasks([''])
     setRating(3)
@@ -380,27 +390,33 @@ export default function CosmosReport() {
               {/* メンバー */}
               <div className="card">
                 <div className="card-title">本日のメンバー</div>
-                <div
-                  className="member-wrap"
-                  onClick={() => document.getElementById('member-inp')?.focus()}
-                >
+                <div className="member-tags">
                   {members.map(m => (
                     <div key={m} className="mtag">
                       {m}
                       <button onClick={() => removeMember(m)}>×</button>
                     </div>
                   ))}
+                </div>
+                <div className="member-input-row">
                   <input
                     id="member-inp"
-                    className="tag-inp"
-                    placeholder="名前を入力してEnter…"
+                    type="text"
+                    placeholder="名前を入力…"
                     value={memberInput}
                     onChange={e => setMemberInput(e.target.value)}
                     onKeyDown={handleMemberKeyDown}
                   />
+                  <button
+                    className="member-add-btn"
+                    onClick={addMember}
+                    disabled={!memberInput.trim()}
+                  >
+                    追加
+                  </button>
                 </div>
                 <div className="hint">
-                  Enterキーで追加。登録販売者の在籍確認・引き継ぎ記録に活用できます。
+                  「追加」ボタンまたはEnterキーで追加できます。
                 </div>
               </div>
 
