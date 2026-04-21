@@ -9,3 +9,12 @@ CREATE TABLE IF NOT EXISTS reports (
 
 -- 日付の降順インデックス（一覧取得を高速化）
 CREATE INDEX IF NOT EXISTS idx_reports_date ON reports (date DESC);
+
+-- Googleカレンダー連携トークン保存
+CREATE TABLE IF NOT EXISTS google_tokens (
+  id           INTEGER PRIMARY KEY DEFAULT 1,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  expires_at   INTEGER NOT NULL,
+  updated_at   TEXT DEFAULT (datetime('now'))
+);

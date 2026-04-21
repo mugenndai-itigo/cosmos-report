@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 
 // ---------- 型定義 ----------
+interface CalendarEvent {
+  id: string
+  summary: string
+  start: { date?: string; dateTime?: string }
+  end: { date?: string; dateTime?: string }
+}
+
 interface Report {
   date: string
   start: string
@@ -110,7 +117,7 @@ async function shareText(text: string) {
 // ---------- メインコンポーネント ----------
 export default function CosmosReport() {
   // タブ
-  const [activeTab, setActiveTab] = useState<'form' | 'history'>('form')
+  const [activeTab, setActiveTab] = useState<'form' | 'calendar' | 'history'>('form')
 
   // フォームの状態
   const [date, setDate] = useState(getTodayStr())
@@ -139,6 +146,11 @@ export default function CosmosReport() {
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [modalReport, setModalReport] = useState<Report | null>(null)
 
+  // Googleカレンダー
+  const [calConnected, setCalConnected] = useState(false)
+  const [calEvents, setCalEvents] = useState<CalendarEvent[]>([])
+  const [loadingCal, setLoadingCal] = useState(false)
+
   // 共有APIサポート確認（SSR対応）
   const [hasShare, setHasShare] = useState(false)
   useEffect(() => {
@@ -148,7 +160,35 @@ export default function CosmosReport() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js').catch(() => {})
     }
+
+    // Google連携の状態チェック
+    fetchCalendar()
+
+    // 連携完了のURLパラメータを確認
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('connected') === 'google') {
+      window.history.replaceState({}, '', '/')
+    }
   }, [])
+
+  // ---------- Googleカレンダー ----------
+  async function fetchCalendar() {
+    setLoadingCal(true)
+    try {
+      const res = await fetch('/api/calendar/events')
+      const data = await res.json() as { connected: boolean; events: CalendarEvent[] }
+      setCalConnected(data.connected)
+      setCalEvents(data.events ?? [])
+    } catch {
+      // 取得失敗は無視
+    } finally {
+      setLoadingCal(false)
+    }
+  }
+
+  function getEventDate(ev: CalendarEvent): string {
+    return ev.start.date ?? ev.start.dateTime?.slice(0, 10) ?? ''
+  }
 
   // ---------- 日報の読み込み ----------
   async function fetchReports() {
@@ -240,6 +280,19 @@ export default function CosmosReport() {
       const text = buildReport(data)
       if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {})
 
+      // Googleカレンダーに出勤イベントを自動追加
+      if (calConnected) {
+        fetch('/api/calendar/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: data.date,
+            shift: data.shift,
+            description: `勤務時間: ${data.start}〜${data.end}（${calcHours(data.start, data.end)}h）\nメンバー: ${data.members.join('、')}`,
+          }),
+        }).catch(() => {})
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
       setError('保存に失敗しました。インターネット接続を確認してください。')
@@ -275,9 +328,10 @@ export default function CosmosReport() {
   }
 
   // ---------- タブ切り替え ----------
-  function switchTab(tab: 'form' | 'history') {
+  function switchTab(tab: 'form' | 'calendar' | 'history') {
     setActiveTab(tab)
     if (tab === 'history') fetchReports()
+    if (tab === 'calendar') fetchCalendar()
   }
 
   // ---------- テキスト生成 ----------
@@ -531,6 +585,60 @@ export default function CosmosReport() {
         </div>
       )}
 
+      {/* ===== カレンダータブ ===== */}
+      {activeTab === 'calendar' && (
+        <div className="container">
+          {/* 接続カード */}
+          <div className="card">
+            <div className="card-title">📅 Googleカレンダー連携</div>
+            {loadingCal ? (
+              <div className="cal-loading">読み込み中...</div>
+            ) : calConnected ? (
+              <div className="cal-connected">
+                <span className="cal-badge">✅ 連携中</span>
+                <p className="cal-desc">日報を保存すると、自動でGoogleカレンダーに出勤日が追加されます。</p>
+                <button className="cal-refresh-btn" onClick={fetchCalendar}>🔄 更新</button>
+              </div>
+            ) : (
+              <div>
+                <p className="cal-desc">Googleカレンダーと連携すると、日報保存時に自動で出勤日が登録されます。</p>
+                <a href="/api/auth/google" className="cal-connect-btn">
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="20" height="20" />
+                  Googleカレンダーと連携する
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* イベント一覧 */}
+          {calConnected && (
+            <div className="card">
+              <div className="card-title">今月のカレンダー</div>
+              {calEvents.length === 0 ? (
+                <div className="cal-empty">イベントがありません</div>
+              ) : (
+                <div className="cal-event-list">
+                  {calEvents
+                    .filter(ev => {
+                      const d = getEventDate(ev)
+                      const now = new Date()
+                      const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+                      return d.startsWith(thisMonth)
+                    })
+                    .map(ev => (
+                      <div key={ev.id} className="cal-event-item">
+                        <span className="cal-event-date">{getEventDate(ev).slice(5).replace('-', '/')}</span>
+                        <span className="cal-event-title">{ev.summary}</span>
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ===== 履歴タブ ===== */}
       {activeTab === 'history' && (
         <div className="container">
@@ -597,6 +705,13 @@ export default function CosmosReport() {
         >
           <span className="tab-icon">📝</span>
           <span className="tab-label">日報作成</span>
+        </button>
+        <button
+          className={`tab-btn${activeTab === 'calendar' ? ' active' : ''}`}
+          onClick={() => switchTab('calendar')}
+        >
+          <span className="tab-icon">📅</span>
+          <span className="tab-label">カレンダー</span>
         </button>
         <button
           className={`tab-btn${activeTab === 'history' ? ' active' : ''}`}

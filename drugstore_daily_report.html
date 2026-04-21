@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コスモス 作業日報</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f7f8fc;color:#2d3748;min-height:100vh}
+.app-header{background:linear-gradient(135deg,#534AB7,#7F77DD);color:white;padding:20px 24px 16px}
+.app-header h1{font-size:1.2rem;font-weight:600;margin-bottom:3px}
+.app-header p{font-size:0.78rem;opacity:.85}
+.container{max-width:680px;margin:0 auto;padding:20px 16px 40px}
+.card{background:white;border:1px solid #e8e8f0;border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.card-title{font-size:12px;font-weight:600;color:#718096;margin-bottom:12px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.04em}
+.cal-badge{display:inline-flex;align-items:center;gap:4px;background:#EAF3DE;color:#3B6D11;font-size:10px;padding:2px 7px;border-radius:20px;text-transform:none;letter-spacing:0}
+.field-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.field{flex:1;min-width:110px}
+.field label{font-size:11px;color:#a0aec0;display:block;margin-bottom:4px;font-weight:500}
+input[type=text],input[type=date],input[type=time],textarea,select{
+  width:100%;font-size:13px;padding:8px 11px;border-radius:9px;
+  border:1px solid #e2e8f0;background:white;color:#2d3748;
+  font-family:inherit;transition:border .15s
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#7F77DD;box-shadow:0 0 0 3px rgba(127,119,221,.12)}
+textarea{resize:vertical;line-height:1.55}
+.shift-btns,.cat-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.sbtn{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid #e2e8f0;
+  background:#f7f8fc;color:#718096;cursor:pointer;transition:all .12s;font-family:inherit}
+.sbtn.sel{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:600}
+.sbtn:hover:not(.sel){background:#f0f0f8;border-color:#c8c4f0}
+.member-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border:1px solid #e2e8f0;
+  border-radius:9px;min-height:42px;cursor:text;background:white;transition:border .15s}
+.member-wrap:focus-within{border-color:#7F77DD;box-shadow:0 0 0 3px rgba(127,119,221,.12)}
+.mtag{display:flex;align-items:center;gap:4px;background:#EEEDFE;color:#3C3489;
+  border-radius:20px;padding:3px 10px;font-size:12px;font-weight:500}
+.mtag button{background:none;border:none;color:#7F77DD;cursor:pointer;font-size:15px;line-height:1;padding:0;margin-left:1px}
+.tag-inp{border:none;outline:none;font-size:12px;min-width:90px;flex:1;background:transparent;color:#2d3748}
+.task-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+.task-row textarea{flex:1;min-height:55px}
+.del-btn{background:none;border:1px solid #e2e8f0;border-radius:7px;width:30px;height:30px;
+  cursor:pointer;color:#a0aec0;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.del-btn:hover{background:#fff5f5;border-color:#feb2b2;color:#e53e3e}
+.add-btn{font-size:12px;color:#7F77DD;background:none;border:1px dashed #c8c4f0;
+  border-radius:9px;padding:7px 14px;cursor:pointer;width:100%;margin-top:2px;
+  font-family:inherit;transition:all .12s}
+.add-btn:hover{background:#EEEDFE;border-style:solid}
+.star-row{display:flex;gap:5px}
+.star{font-size:26px;cursor:pointer;color:#e2e8f0;transition:color .1s;line-height:1}
+.star.on{color:#EF9F27}
+.submit-btn{width:100%;padding:14px;background:#534AB7;color:white;border:none;
+  border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:background .15s;margin-top:4px}
+.submit-btn:hover{background:#3C3489}
+.submit-btn:disabled{background:#e2e8f0;color:#a0aec0;cursor:default}
+.preview-box{background:#f7f8fc;border-radius:10px;padding:14px;font-size:12px;
+  line-height:1.85;color:#2d3748;white-space:pre-wrap;font-family:monospace;
+  display:none;border:1px solid #e2e8f0;margin-top:10px}
+.success-box{background:#EAF3DE;border:1px solid #97C459;border-radius:12px;
+  padding:20px;text-align:center;display:none;margin-top:8px}
+.success-icon{font-size:32px;margin-bottom:8px}
+.success-box p{color:#3B6D11;font-size:13px;line-height:1.6}
+.reset-btn{margin-top:10px;font-size:12px;color:#3B6D11;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit}
+.hint{font-size:11px;color:#a0aec0;margin-top:5px;line-height:1.5}
+.spec-row{display:flex;gap:8px;padding:10px 0;border-bottom:1px solid #f0f2f8;font-size:13px;align-items:flex-start}
+.spec-row:last-child{border:none}
+.spec-num{width:22px;height:22px;border-radius:50%;background:#EEEDFE;color:#3C3489;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.preview-toggle{font-size:12px;color:#7F77DD;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline}
+.duration-display{font-size:13px;color:#534AB7;font-weight:600;margin-top:6px;min-height:20px}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>📋 コスモス 作業日報</h1>
+  <p>登録販売者 日次記録アプリ — Google Calendarと連携</p>
+</div>
+
+<div class="container">
+
+<!-- 基本情報 -->
+<div class="card">
+  <div class="card-title">基本情報 <span class="cal-badge">📅 カレンダー連携</span></div>
+  <div class="field-row">
+    <div class="field">
+      <label>日付</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="field">
+      <label>開始時間</label>
+      <input type="time" id="f-start" value="12:30" onchange="updateDuration()">
+    </div>
+    <div class="field">
+      <label>終了時間</label>
+      <input type="time" id="f-end" value="21:15" onchange="updateDuration()">
+    </div>
+  </div>
+  <div class="duration-display" id="duration-disp">勤務時間：8.75時間</div>
+  <div style="margin-top:12px">
+    <label style="font-size:11px;color:#a0aec0;font-weight:500">シフト区分</label>
+    <div class="shift-btns" id="shift-btns">
+      <button class="sbtn sel" onclick="selShift(this,'遅番（〜21:15）','21:15')">遅番（〜21:15）</button>
+      <button class="sbtn" onclick="selShift(this,'早番（〜17:00）','17:00')">早番（〜17:00）</button>
+      <button class="sbtn" onclick="selShift(this,'中番','')">中番</button>
+      <button class="sbtn" onclick="selShift(this,'その他','')">その他</button>
+    </div>
+  </div>
+  <input type="hidden" id="f-shift" value="遅番（〜21:15）">
+</div>
+
+<!-- メンバー -->
+<div class="card">
+  <div class="card-title">本日のメンバー</div>
+  <div class="member-wrap" id="member-wrap" onclick="document.getElementById('member-inp').focus()">
+    <div class="mtag">りえ（自分）<button onclick="removeMember(this,event)">×</button></div>
+    <input class="tag-inp" id="member-inp" placeholder="名前を入力してEnter…" onkeydown="addMember(event)">
+  </div>
+  <div class="hint">Enterキーで追加。登録販売者の在籍確認・引き継ぎ記録にも活用できます。</div>
+</div>
+
+<!-- 作業カテゴリ -->
+<div class="card">
+  <div class="card-title">作業カテゴリ（複数選択可）</div>
+  <div class="cat-btns" id="cat-btns">
+    <button class="sbtn sel" onclick="toggleCat(this)">医薬品相談</button>
+    <button class="sbtn" onclick="toggleCat(this)">レジ・接客</button>
+    <button class="sbtn" onclick="toggleCat(this)">品出し・陳列</button>
+    <button class="sbtn" onclick="toggleCat(this)">在庫確認</button>
+    <button class="sbtn" onclick="toggleCat(this)">発注</button>
+    <button class="sbtn" onclick="toggleCat(this)">清掃</button>
+    <button class="sbtn" onclick="toggleCat(this)">閉店作業</button>
+    <button class="sbtn" onclick="toggleCat(this)">棚卸し</button>
+    <button class="sbtn" onclick="toggleCat(this)">研修・勉強</button>
+  </div>
+</div>
+
+<!-- 作業内容 -->
+<div class="card">
+  <div class="card-title">作業内容の詳細</div>
+  <div id="tasks">
+    <div class="task-row">
+      <textarea rows="2" placeholder="例：花粉症薬の相談対応 3件。アレグラとクラリチンの違いを案内しました。"></textarea>
+      <button class="del-btn" onclick="removeTask(this)">×</button>
+    </div>
+  </div>
+  <button class="add-btn" onclick="addTask()">＋ 作業を追加</button>
+</div>
+
+<!-- 登録販売者専用記録 -->
+<div class="card">
+  <div class="card-title">登録販売者 専門記録</div>
+  <div class="field" style="margin-bottom:12px">
+    <label>医薬品相談件数と内容</label>
+    <input type="text" id="f-consult" placeholder="例：5件（花粉症×3、頭痛×1、胃腸薬×1）" style="margin-top:4px">
+  </div>
+  <div class="field" style="margin-bottom:12px">
+    <label>第2類医薬品 販売・対応の記録</label>
+    <textarea id="f-pharma" rows="2" placeholder="例：禁忌確認済み。他の薬との飲み合わせをお客様に説明。" style="margin-top:4px"></textarea>
+  </div>
+  <div class="field">
+    <label>ヒヤリハット・申し送り事項</label>
+    <textarea id="f-hiyari" rows="2" placeholder="例：特になし。／薬の配置変更あり、翌日スタッフへ要共有。" style="margin-top:4px"></textarea>
+  </div>
+</div>
+
+<!-- コンディション -->
+<div class="card">
+  <div class="card-title">本日のコンディション</div>
+  <div style="margin-bottom:14px">
+    <label style="font-size:11px;color:#a0aec0;font-weight:500;display:block;margin-bottom:7px">体力・集中力（★で評価）</label>
+    <div class="star-row" id="stars">
+      <span class="star" onclick="setRating(1)">★</span>
+      <span class="star" onclick="setRating(2)">★</span>
+      <span class="star on" onclick="setRating(3)">★</span>
+      <span class="star" onclick="setRating(4)">★</span>
+      <span class="star" onclick="setRating(5)">★</span>
+    </div>
+  </div>
+  <div class="field">
+    <label>メモ・一言感想</label>
+    <textarea id="f-memo" rows="2" placeholder="例：花粉症シーズンで忙しかったが充実。足が疲れた。"></textarea>
+  </div>
+</div>
+
+<!-- プレビュー -->
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div class="card-title" style="margin:0">日報プレビュー</div>
+    <button class="preview-toggle" onclick="togglePreview()">表示 / 非表示</button>
+  </div>
+  <div class="preview-box" id="preview"></div>
+</div>
+
+<!-- 送信ボタン -->
+<button class="submit-btn" onclick="submitReport()" id="submit-btn">
+  📅 Googleカレンダーに保存して日報を記録
+</button>
+
+<div class="success-box" id="success">
+  <div class="success-icon">✅</div>
+  <p id="success-msg">日報を作成しました！<br>Googleカレンダーへの登録リクエストを送信しました。</p>
+  <button class="reset-btn" onclick="resetForm()">新しい日報を作成する</button>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// 今日の日付をセット
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth()+1).padStart(2,'0');
+const dd = String(today.getDate()).padStart(2,'0');
+document.getElementById('f-date').value = `${yyyy}-${mm}-${dd}`;
+
+let rating = 3;
+
+function updateDuration() {
+  const s = document.getElementById('f-start').value;
+  const e = document.getElementById('f-end').value;
+  if (!s || !e) return;
+  const [sh,sm] = s.split(':').map(Number);
+  const [eh,em] = e.split(':').map(Number);
+  const mins = eh*60+em - sh*60-sm;
+  if (mins <= 0) { document.getElementById('duration-disp').textContent = ''; return; }
+  const h = (mins/60).toFixed(2).replace(/\.?0+$/,'');
+  document.getElementById('duration-disp').textContent = `勤務時間：${h}時間`;
+}
+updateDuration();
+
+function selShift(el, val, endTime) {
+  document.querySelectorAll('#shift-btns .sbtn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('f-shift').value = val;
+  if (endTime) { document.getElementById('f-end').value = endTime; updateDuration(); }
+}
+
+function toggleCat(el) { el.classList.toggle('sel'); }
+
+function getSelectedCats() {
+  return Array.from(document.querySelectorAll('#cat-btns .sbtn.sel')).map(b => b.textContent);
+}
+
+function addMember(e) {
+  if (e.key !== 'Enter') return;
+  const inp = document.getElementById('member-inp');
+  const val = inp.value.trim();
+  if (!val) return;
+  const wrap = document.getElementById('member-wrap');
+  const tag = document.createElement('div');
+  tag.className = 'mtag';
+  tag.innerHTML = `${val}<button onclick="removeMember(this,event)">×</button>`;
+  wrap.insertBefore(tag, inp);
+  inp.value = '';
+  e.preventDefault();
+}
+
+function removeMember(btn, e) { e.stopPropagation(); btn.parentElement.remove(); }
+
+function addTask() {
+  const tasks = document.getElementById('tasks');
+  const row = document.createElement('div');
+  row.className = 'task-row';
+  row.innerHTML = `<textarea rows="2" placeholder="作業内容を記入..."></textarea><button class="del-btn" onclick="removeTask(this)">×</button>`;
+  tasks.appendChild(row);
+  row.querySelector('textarea').focus();
+}
+
+function removeTask(btn) {
+  const rows = document.querySelectorAll('.task-row');
+  if (rows.length > 1) btn.parentElement.remove();
+}
+
+function setRating(n) {
+  rating = n;
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('on', i < n));
+}
+
+function getMembers() {
+  return Array.from(document.querySelectorAll('.mtag')).map(t => t.textContent.replace('×','').trim());
+}
+
+function getTasks() {
+  return Array.from(document.querySelectorAll('#tasks textarea')).map(t => t.value.trim()).filter(Boolean);
+}
+
+function calcHours(s, e) {
+  const [sh,sm] = s.split(':').map(Number);
+  const [eh,em] = e.split(':').map(Number);
+  return ((eh*60+em - sh*60-sm)/60).toFixed(2).replace(/\.?0+$/,'');
+}
+
+function buildReport() {
+  const date = document.getElementById('f-date').value;
+  const start = document.getElementById('f-start').value;
+  const end = document.getElementById('f-end').value;
+  const shift = document.getElementById('f-shift').value;
+  const members = getMembers();
+  const cats = getSelectedCats();
+  const tasks = getTasks();
+  const consult = document.getElementById('f-consult').value || '記録なし';
+  const pharma = document.getElementById('f-pharma').value || '特になし';
+  const hiyari = document.getElementById('f-hiyari').value || '特になし';
+  const memo = document.getElementById('f-memo').value || '特になし';
+  const stars = '★'.repeat(rating) + '☆'.repeat(5-rating);
+
+  return `【コスモス 作業日報】${date}
+━━━━━━━━━━━━━━━━━━
+◆ 基本情報
+・日付：${date}
+・勤務時間：${start}〜${end}（${calcHours(start,end)}h）
+・シフト区分：${shift}
+
+◆ 本日のメンバー
+・${members.join('、')}
+
+◆ 作業カテゴリ
+・${cats.join('・') || '（未選択）'}
+
+◆ 作業内容
+${tasks.length ? tasks.map((t,i) => `${i+1}. ${t}`).join('\n') : '（未記入）'}
+
+◆ 登録販売者 専門記録
+・医薬品相談：${consult}
+・第2類販売記録：${pharma}
+・ヒヤリハット・申し送り：${hiyari}
+
+◆ 本日のコンディション：${stars}（${rating}/5）
+・メモ：${memo}
+━━━━━━━━━━━━━━━━━━
+#コスモス #登録販売者 #日報`;
+}
+
+function togglePreview() {
+  const box = document.getElementById('preview');
+  if (box.style.display === 'block') { box.style.display = 'none'; return; }
+  box.textContent = buildReport();
+  box.style.display = 'block';
+}
+
+function submitReport() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+  const report = buildReport();
+  const date = document.getElementById('f-date').value;
+  const start = document.getElementById('f-start').value;
+  const end = document.getElementById('f-end').value;
+
+  // カレンダーイベントのテキストをクリップボードにコピー
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(report).catch(()=>{});
+  }
+
+  document.getElementById('success').style.display = 'block';
+  document.getElementById('submit-btn').style.display = 'none';
+  document.getElementById('success-msg').innerHTML =
+    `日報を作成しました！<br>日報テキストをコピーしました。<br><small style="color:#5a8a5a">Claudeに「カレンダーに登録して」と伝えると自動登録できます。</small>`;
+}
+
+function resetForm() {
+  document.getElementById('success').style.display = 'none';
+  document.getElementById('submit-btn').style.display = 'block';
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').textContent = '📅 Googleカレンダーに保存して日報を記録';
+  document.getElementById('f-consult').value = '';
+  document.getElementById('f-pharma').value = '';
+  document.getElementById('f-hiyari').value = '';
+  document.getElementById('f-memo').value = '';
+  document.getElementById('preview').style.display = 'none';
+  document.querySelectorAll('#tasks textarea').forEach((t,i) => { if(i>0) t.parentElement.remove(); else t.value=''; });
+  setRating(3);
+}
+</script>
+</body>
+</html>
