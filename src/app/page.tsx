@@ -442,7 +442,7 @@ export default function CosmosReport() {
                 {tasks.map((task, idx) => (
                   <div key={idx} className="task-row">
                     <textarea
-                      rows={2}
+                      rows={3}
                       placeholder="例：花粉症薬の相談対応 3件。アレグラとクラリチンの違いを案内しました。"
                       value={task}
                       onChange={e => updateTask(idx, e.target.value)}
@@ -469,7 +469,7 @@ export default function CosmosReport() {
                 <div className="field" style={{ marginBottom: 12 }}>
                   <label>第2類医薬品 販売・対応の記録</label>
                   <textarea
-                    rows={2}
+                    rows={3}
                     value={pharma}
                     onChange={e => setPharma(e.target.value)}
                     placeholder="例：禁忌確認済み。他の薬との飲み合わせをお客様に説明。"
@@ -479,7 +479,7 @@ export default function CosmosReport() {
                 <div className="field">
                   <label>ヒヤリハット・申し送り事項</label>
                   <textarea
-                    rows={2}
+                    rows={3}
                     value={hiyari}
                     onChange={e => setHiyari(e.target.value)}
                     placeholder="例：特になし。／薬の配置変更あり、翌日スタッフへ要共有。"
@@ -508,7 +508,7 @@ export default function CosmosReport() {
                 <div className="field">
                   <label>メモ・一言感想</label>
                   <textarea
-                    rows={2}
+                    rows={3}
                     value={memo}
                     onChange={e => setMemo(e.target.value)}
                     placeholder="例：花粉症シーズンで忙しかったが充実。足が疲れた。"

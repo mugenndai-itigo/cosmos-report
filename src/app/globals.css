@@ -68,9 +68,9 @@ textarea,
 select {
   width: 100%;
   font-size: 16px;
-  padding: 10px 12px;
-  border-radius: 9px;
-  border: 1px solid #e2e8f0;
+  padding: 14px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
   background: white;
   color: #2d3748;
   font-family: inherit;
@@ -83,7 +83,11 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--purple-light);
   box-shadow: 0 0 0 3px rgba(127,119,221,.12);
 }
-textarea { resize: vertical; line-height: 1.55; }
+textarea {
+  resize: vertical;
+  line-height: 1.7;
+  min-height: 90px;
+}
 
 /* Apple HIG準拠: タップターゲット44px以上 */
 .shift-btns, .cat-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
@@ -116,8 +120,10 @@ textarea { resize: vertical; line-height: 1.55; }
   gap: 8px;
   align-items: center;
 }
-.member-input-row input {
+.member-input-row input[type=text] {
   flex: 1;
+  width: auto;
+  min-width: 0;
 }
 .member-add-btn {
   flex-shrink: 0;
@@ -162,8 +168,8 @@ textarea { resize: vertical; line-height: 1.55; }
   justify-content: center;
 }
 
-.task-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
-.task-row textarea { flex: 1; min-height: 60px; }
+.task-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.task-row textarea { flex: 1; min-height: 90px; }
 .del-btn {
   background: none;
   border: 1px solid #e2e8f0;
