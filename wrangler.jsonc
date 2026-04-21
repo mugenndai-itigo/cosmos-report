@@ -10,7 +10,7 @@
       "binding": "DB",
       "database_name": "cosmos-report-db",
       // ⚠️ D1データベース作成後に下の database_id を書き換えてください
-      "database_id": "REPLACE_WITH_YOUR_DATABASE_ID"
+      "database_id": "615aa4cf-0254-445c-a1f5-a90b21c2c5b8"
     }
   ]
 }
