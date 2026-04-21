@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-export const runtime = 'edge'
-
 // DELETE /api/reports/[date] → 指定した日付の日報を削除
 export async function DELETE(
   _request: Request,

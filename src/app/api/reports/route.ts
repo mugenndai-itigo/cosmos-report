@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-export const runtime = 'edge'
-
 // GET /api/reports → 全日報を日付の新しい順で返す
 export async function GET() {
   try {

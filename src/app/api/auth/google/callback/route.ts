@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
-export const runtime = 'edge'
-
 const REDIRECT_URI = 'https://cosmos-report.rie813806.workers.dev/api/auth/google/callback'
 const APP_URL = 'https://cosmos-report.rie813806.workers.dev'
 
