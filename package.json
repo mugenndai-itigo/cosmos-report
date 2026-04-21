@@ -1,0 +1,28 @@
+{
+  "name": "cosmos-report",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:worker": "opennextjs-cloudflare build",
+    "deploy": "npm run build:worker && wrangler pages deploy",
+    "preview": "npm run build:worker && wrangler pages dev",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^16.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250409.0",
+    "@opennextjs/cloudflare": "^1.19.2",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5",
+    "wrangler": "^4"
+  }
+}

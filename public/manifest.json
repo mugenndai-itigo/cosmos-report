@@ -1,0 +1,22 @@
+{
+  "name": "コスモス日報",
+  "short_name": "日報",
+  "description": "コスモスドラッグストア 登録販売者 作業日報アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#534AB7",
+  "theme_color": "#534AB7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

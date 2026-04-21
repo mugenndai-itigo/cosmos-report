@@ -1,0 +1,20 @@
+# 依存パッケージ（大量のファイルなのでコミットしない）
+node_modules/
+
+# ビルド成果物
+.next/
+.open-next/
+.vercel/
+
+# Next.js が自動生成するファイル
+next-env.d.ts
+
+# ログ
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# 圧縮ファイル（不要）
+files.zip

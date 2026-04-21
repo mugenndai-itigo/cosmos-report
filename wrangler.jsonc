@@ -1,0 +1,16 @@
+{
+  "name": "cosmos-report",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+  // セキュリティ: プレビューURLを無効化（Cloudflare Accessをバイパスされないため）
+  "preview_urls": false,
+  "pages_build_output_dir": ".open-next/cloudflare",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cosmos-report-db",
+      // ⚠️ D1データベース作成後に下の database_id を書き換えてください
+      "database_id": "REPLACE_WITH_YOUR_DATABASE_ID"
+    }
+  ]
+}
