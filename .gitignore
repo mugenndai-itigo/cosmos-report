@@ -19,3 +19,4 @@ npm-debug.log*
 # 圧縮ファイル（不要）
 files.zip
 .wrangler/
+CI test
