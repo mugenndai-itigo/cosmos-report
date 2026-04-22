@@ -358,6 +358,16 @@ export default function CosmosReport() {
           {/* エラー表示 */}
           {error && <div className="error-box">⚠️ {error}</div>}
 
+          {/* カレンダー未連携バナー（フォームタブのみ・保存前） */}
+          {!showSuccess && !calConnected && !loadingCal && (
+            <button
+              className="cal-hint-banner"
+              onClick={() => switchTab('calendar')}
+            >
+              📅 Googleカレンダーと連携すると出勤日が自動登録されます →
+            </button>
+          )}
+
           {/* 保存完了 */}
           {showSuccess && lastReport && (
             <div className="success-box">

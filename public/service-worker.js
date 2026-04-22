@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cosmos-report-v2';
+const CACHE_NAME = 'cosmos-report-v3';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
