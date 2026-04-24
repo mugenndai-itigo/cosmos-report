@@ -94,7 +94,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '未連携', connected: false }, { status: 401 })
     }
 
-    const body = await request.json() as { date: string; shift: string; description: string }
+    const body = await request.json() as { date?: unknown; shift?: unknown; description?: unknown }
+
+    // 入力バリデーション
+    if (
+      typeof body.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(body.date) ||
+      typeof body.shift !== 'string' || body.shift.length > 100 ||
+      typeof body.description !== 'string' || body.description.length > 1000
+    ) {
+      return NextResponse.json({ error: '入力値が不正です' }, { status: 400 })
+    }
 
     const event = {
       summary: `🏪 コスモス出勤（${body.shift}）`,

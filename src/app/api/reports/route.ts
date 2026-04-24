@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getCloudflareContext } from '@opennextjs/cloudflare'
 
+// 日付フォーマット検証（YYYY-MM-DD）
+function isValidDate(date: unknown): date is string {
+  if (typeof date !== 'string') return false
+  return /^\d{4}-\d{2}-\d{2}$/.test(date)
+}
+
 // GET /api/reports → 全日報を日付の新しい順で返す
 export async function GET() {
   try {
@@ -24,10 +30,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { env } = await getCloudflareContext()
-    const data = await request.json() as { date?: string }
+    const data = await request.json() as { date?: unknown }
 
-    if (!data.date) {
-      return NextResponse.json({ error: 'date が必要です' }, { status: 400 })
+    // 入力バリデーション
+    if (!isValidDate(data.date)) {
+      return NextResponse.json({ error: '日付の形式が不正です' }, { status: 400 })
     }
 
     await env.DB
